@@ -54,3 +54,20 @@ In the parallel coordinates plot, you will likely see lines clustering toward hi
 
 ### Question 9: 
 Sort the val_accuracy column descending in the MLflow UI to locate your best model. Make sure to copy that specific Run ID (a 32-character string), as it will be required for your next lab.
+
+### Best Model Results
+After running multiple experiments with varying learning rates and batch sizes on the `mini` dataset, the best-performing model achieved the following results:
+
+* **Run ID:** `26fb07a20a6e4a94942f3ea119b53baf`
+* **Run Name:** treasured-sloth-562
+
+**Best Hyperparameters:**
+* Dataset: mini
+* Epochs: 5
+* Learning Rate (lr): 0.01
+* Batch Size: 32
+
+**Final Metrics:**
+* Validation Accuracy: ~17.34% (0.1733)
+* Validation Loss: 2.4244
+* Training Loss: 2.3759
