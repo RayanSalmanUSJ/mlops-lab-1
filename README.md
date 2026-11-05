@@ -71,3 +71,31 @@ After running multiple experiments with varying learning rates and batch sizes o
 * Validation Accuracy: ~17.34% (0.1733)
 * Validation Loss: 2.4244
 * Training Loss: 2.3759
+
+# LAB 3
+### Question 1
+The model was given version 1. A logged model artifact is just a raw file saved to disk tied to a specific historical training run. A registered model acts as a centralized catalog that gives that model a persistent name (e.g., `food11`), tracks its lineage, and manages its deployment lifecycle across different versions independently of the raw experiment runs.
+
+### Question 2:
+Custom aliases (like `champion` or `challenger`) replaced the old fixed stages (`Staging`/`Production`). Versioning models separately allows you to manage the deployment lifecycle of the best models without sorting through hundreds of failed or experimental runs. Aliases are more flexible because they are mutable pointers; you can instantly reassign the `champion` tag to a newer version without touching your application code, whereas hardcoded stages were rigid.
+
+### Question 3:
+Using the MLflow model URI decouples the API code from hardcoded file paths and specific model versions. The application dynamically fetches whichever model currently holds the `champion` tag. To serve a newer model, you wouldn't need to change or redeploy the application code at all; you would simply update the `champion` alias in the MLflow Model Registry to point to the new version.
+
+### Question 4:
+Docker caches each layer sequentially. Because dependencies change much less frequently than application code, copying the lockfile and syncing first caches the heavy installation step. If you only change a line in `serve.py`, Docker skips the dependency installation and only rebuilds the final `COPY src/ ./src/` layer, making rebuilds nearly instant.
+
+### Question 5:
+A multi-stage image is significantly smaller. The final runtime stage discards all the heavy build tools, package managers (`uv`), and source caches from the builder stage, retaining only the minimal Python runtime and the compiled dependencies required to execute the API.
+
+### Question 6:
+Without `.dockerignore`, the Docker daemon copies your entire project directory (including gigabytes of image data and models) into the build context, destroying build speed and ballooning image size. Crucially, copying the local `.venv/` folder would break the build: it contains a Windows-compiled virtual environment, which is completely incompatible with the Linux base image inside the container.
+
+### Question 7:
+Because a Docker container runs in its own isolated network namespace, `127.0.0.1` (localhost) inside the container points to the container itself, not the host machine. `host.docker.internal` is a special DNS name provided by Docker Desktop that resolves to the host machine's internal IP address, allowing the container to bridge the gap and communicate with the local MLflow server.
+
+### Question 8:
+Yes, the model still loads correctly. This tells us that the model files are *not* baked into the Docker image itself. Instead, the image only contains the API code and the Python environment (the dependencies). The actual ML model is fetched dynamically at runtime from the MLflow tracking server via the `MLFLOW_TRACKING_URI`.
+
+### Question 9:
+The built Docker image currently only exists locally on this specific machine. To allow other machines or CI pipelines to pull and run the exact same container, the image needs to be pushed to a remote container registry (such as Docker Hub, GitHub Container Registry, or AWS ECR) using `docker push`.
