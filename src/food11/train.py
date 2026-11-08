@@ -2,6 +2,7 @@ import argparse
 import mlflow
 import mlflow.pytorch
 import torch
+import os
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, models, transforms
@@ -17,7 +18,8 @@ def main():
     args = parser.parse_args()
 
     # Point to the local tracking server and experiment
-    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
+    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment("food11")
 
     # Map dataset string to actual folder path

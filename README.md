@@ -99,3 +99,38 @@ Yes, the model still loads correctly. This tells us that the model files are *no
 
 ### Question 9:
 The built Docker image currently only exists locally on this specific machine. To allow other machines or CI pipelines to pull and run the exact same container, the image needs to be pushed to a remote container registry (such as Docker Hub, GitHub Container Registry, or AWS ECR) using `docker push`.
+
+# LAB 4
+
+### Question 1:
+If a volume is not mounted, everything written to `/mlflow-data` is saved to the container's ephemeral, writable layer. When the container is stopped and removed, all that data (the database and artifacts) is permanently deleted. Starting a new container from the same image will result in a completely empty MLflow UI with no history.
+
+### Question 2:
+A named volume is managed entirely by Docker, making it highly portable and immune to file permission conflicts across different operating systems. A bind mount maps directly to a specific folder path on the host machine, which works for local development but can cause permission errors (like the SQLite lock issues encountered earlier) or break if the path changes on a different host.
+
+### Question 3:
+The hostname resolves because Docker Compose automatically creates an isolated, custom network for all the services defined in the `docker-compose.yml` file. Within this custom network, Docker provides embedded DNS resolution, allowing containers to discover and communicate with each other simply by using their assigned service names (like `mlflow`) as hostnames.
+
+### Question 4:
+Reading the URL from an environment variable decouples the frontend code from a specific deployment environment. If the URL were hardcoded, the image could only ever work inside the specific Compose network where the backend is named `inference`. By using an environment variable, the image becomes flexible and can be run standalone or pointed at a remote production API without modifying the application code.
+
+### Question 5:
+The `inference` service does not need a published port because it is only meant to be accessed internally by the frontend service, not directly by a user from the host machine. The frontend container can still reach the inference container over port 8000 because all ports are inherently open and accessible *within* the private Docker Compose network; publishing a port only controls external access from the host.
+
+### Question 6:
+If the inference container attempts to fetch the model before the MLflow server is fully initialized and accepting connections, the API call will fail with a connection error. Because `serve.py` loads the model synchronously at startup, the failure will cause the Uvicorn application to crash, and the `inference` container will exit entirely.
+
+### Question 7:
+The `mlflow` and `frontend` services have published ports (5000 and 8501, respectively). The `inference` service does not have a published port listed. This perfectly matches the `docker-compose.yml` file, where only `mlflow` and `frontend` were given `ports:` blocks, leaving `inference` strictly on the internal Docker network.
+
+### Question 8:
+The prediction still comes from the old model version because `serve.py` caches the model in memory at startup and does not actively poll MLflow for updates. To fetch the new version without rebuilding anything, you just restart the container: `docker compose restart inference`.
+
+### Question 9:
+A restart works without a rebuild because the ML model is not baked into the Docker image itself. The image only contains the static Python code and dependencies. The model artifacts are dynamic data fetched over the network from the MLflow tracking server every time the container executes its startup routine.
+
+### Question 10:
+Yes, after a standard `down` and `up`, the model is still there because the `mlflow-data` volume persists. However, running `docker compose down -v` destroys all named volumes. When bringing it back `up` afterwards, the MLflow UI is completely empty because the persistent database and artifacts were explicitly deleted.
+
+### Question 11:
+Docker Compose is inherently limited to single-node orchestration. To distribute replicas across multiple machines, automatically load balance incoming traffic, and provide self-healing failover if a machine dies, we would need a distributed container orchestration system like Kubernetes or Docker Swarm.
