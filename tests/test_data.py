@@ -1,5 +1,7 @@
 from PIL import Image
+
 from src.food11.data import CLASSES, category_from_filename, resize_image
+
 
 def test_category_from_filename():
     assert category_from_filename("0_12.jpg") == "Bread"

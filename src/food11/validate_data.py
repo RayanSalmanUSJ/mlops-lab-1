@@ -1,7 +1,9 @@
-import sys
 import hashlib
+import sys
 from pathlib import Path
+
 from PIL import Image
+
 
 def validate(data_dir: str):
     root = Path(data_dir)
@@ -52,7 +54,7 @@ def validate(data_dir: str):
                         if img.mode != "RGB" or img.size != (128, 128):
                             print(f"FAIL: Image {img_path} is {img.mode} {img.size}.")
                             all_passed = False
-                except Exception:
+                except Exception: # noqa: BLE001
                     print(f"FAIL: Could not open {img_path}.")
                     all_passed = False
                     

@@ -1,6 +1,7 @@
-import os
 import hashlib
+import os
 from pathlib import Path
+
 from PIL import Image
 
 CLASSES = [
