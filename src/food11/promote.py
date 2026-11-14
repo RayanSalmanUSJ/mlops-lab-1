@@ -1,7 +1,8 @@
 import argparse
 import math
-import mlflow
+
 from mlflow.tracking import MlflowClient
+
 
 def promote(candidate_version: int):
     client = MlflowClient()
@@ -18,7 +19,7 @@ def promote(candidate_version: int):
         champion = client.get_model_version_by_alias(model_name, "champion")
         champ_run = client.get_run(champion.run_id)
         acc_champion = champ_run.data.metrics.get("val_accuracy", 0.0)
-    except Exception:
+    except Exception: # noqa: BLE001
         # If no champion exists, auto-promote the first one
         client.set_registered_model_alias(model_name, "champion", candidate_version)
         print(f"No existing champion. Version {candidate_version} promoted.")
