@@ -20,6 +20,11 @@ def category_from_filename(filename: str) -> str:
     cat_id = int(filename.split("_")[0])
     return CLASSES[cat_id]
 
+# def category_from_filename(filename: str) -> str:
+#     """'3_120.jpg' -> 'Egg'"""
+#     cat_id = int(filename.split("_")[0])
+#     return "Pizza" # Deliberately broken for Question 9
+
 def resize_image(img: "Image.Image", size: int = 128) -> "Image.Image":
     """Returns an RGB image of size x size."""
     if img.mode != "RGB":
