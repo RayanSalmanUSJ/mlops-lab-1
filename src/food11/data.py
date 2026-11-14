@@ -15,10 +15,15 @@ MINI_DIR = Path("data/food11_processed_mini")
 TARGET_SIZE = (128, 128)
 MINI_LIMIT = 100
 
+# def category_from_filename(filename: str) -> str:
+#     """'3_120.jpg' -> 'Egg'"""
+#     cat_id = int(filename.split("_")[0])
+#     return CLASSES[cat_id]
+
 def category_from_filename(filename: str) -> str:
     """'3_120.jpg' -> 'Egg'"""
     cat_id = int(filename.split("_")[0])
-    return CLASSES[cat_id]
+    return "Pizza" # Deliberately broken for Question 9
 
 def resize_image(img: "Image.Image", size: int = 128) -> "Image.Image":
     """Returns an RGB image of size x size."""
