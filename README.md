@@ -143,3 +143,52 @@ The MLflow server is temporarily down or inaccessible due to network issues.
 The champion alias was accidentally moved to a broken or missing model artifact in the database, causing the test to crash when it tries to download it.
 
 ### Question 2:
+The test_predict_returns_valid_json test proves that your API endpoint correctly receives a file upload, executes the FastAPI routing logic, successfully parses the FakeModel's hardcoded output array, formats it into a valid JSON dictionary mapping the highest probability index to the correct string ("Bread"), and returns a 200 OK status. It does not prove that the actual PyTorch ResNet model can correctly classify a picture of bread, nor does it prove that the image decoding and preprocessing steps are mathematically correct for a real tensor inference.
+
+### Question 3:
+Check 4 (duplicate hash check) caught it. A train/test duplicate is far more dangerous than a corrupted image because a corrupted image throws an immediate, visible error that stops training, forcing you to fix it. A duplicate silently inflates your model's evaluation metrics (data leakage), giving you a false sense of security that the model generalized well, when in reality, it just memorized the test data.
+
+### Question 4:
+Two places validate_data.py could run to protect the pipeline when data isn't visible to GitHub runners:
+
+As a Git pre-commit or pre-push hook on the developer's laptop before code and DVC hashes are pushed to the remote repository.
+
+Directly inside the train.py script as a mandatory first step before PyTorch begins loading the dataset into DataLoaders.
+
+### Question 5:
+Because smoke has needs: test, if a unit test fails, the smoke job is automatically canceled (skipped) and will not run. Without the needs parameter, GitHub Actions would run test and smoke in parallel at the exact same time, potentially wasting compute time building a Docker image for broken code.
+
+### Question 6:
+The first run took 6m38s, and the second run took 2m33s. The steps that got significantly faster were uv sync (because we enabled --cache: true in the setup action to cache the downloaded Python packages) and the Docker build step (because we used cache-from: type=gha, which reused the Docker layers from the first run instead of reinstalling everything from scratch).
+
+### Question 7:
+Tagging with the exact Git commit SHA (e.g., a1b2c3d) guarantees immutability and exact traceability. A concrete situation where latest fails: Developer A deploys latest to Server 1 on Monday. On Tuesday, Developer B pushes a breaking change, overwriting the latest tag in the registry. When Server 2 automatically scales up on Wednesday and pulls latest, it pulls the broken Tuesday code, while Server 1 is still running the stable Monday code. Both claim to be running latest, but their codebases are dangerously mismatched.
+
+### Question 8:
+The push job explicitly declares permissions: packages: write because the principle of least privilege dictates that automated runners should only have the exact rights they need for a specific task. If a bad actor compromised a dependency in the smoke or test step (e.g., a malicious package injected during uv sync) and the token had global write access, the script could maliciously rewrite the repository's source code, delete releases, or change repository settings.
+
+### Question 9:
+The pull request page shows a red cross next to the failing test job, and a prominent red warning stating "Merging is blocked" because some checks were not successful. The "Merge pull request" button is completely disabled. You cannot merge. This fundamentally changes team dynamics: instead of relying on an honor system where developers "promise" they ran tests locally, the CI server acts as an impartial, automated enforcer that prevents broken code from ever entering the production branch.
+
+### Question 10:
+Based on the promote.py script output, the current champion has an accuracy of 35.22% (0.3522). The script calculated the standard error as 0.0151 (using $n=1000$). To pass the statistical gate, a candidate must beat the champion by at least $2 \times SE$. Therefore, the upper bound is $0.3522 + 2(0.0151) = 0.3824$. A new candidate model must achieve at least a 38.24% validation accuracy to be promoted to champion.
+
+### Question 11:
+Two ways to automatically run promote.py after training when MLflow is hosted centrally (like on DagsHub):
+
+Add it as the final step in a DVC pipeline (dvc.yaml) so it executes immediately after train.py finishes generating the metrics and registering the model.
+
+Trigger it via a GitHub Actions workflow that runs on a schedule (e.g., nightly) or listens for a webhook event indicating a new model version was registered in the remote MLflow instance.
+
+### Question 12:
+[Local Dev] ---(git push)---> [GitHub Actions (Auto)] ---> [Lint/Test (Auto)] ---> [Build Image (Auto)] ---> [Push to GHCR (Auto)]
+                               |
+                        Code Version Decided (Git SHA)
+
+[Local Env] ---(train.py)---> [MLflow UI (Human/Script)] ---(promote.py)---> [Staging/Champion]
+                               |
+                        Model Version Decided (MLflow Alias)
+
+The Docker image build/push is entirely automatic via GitHub Actions.
+
+The model training and promotion trigger still requires a human to run the scripts locally (or via a separate pipeline).
