@@ -134,3 +134,12 @@ Yes, after a standard `down` and `up`, the model is still there because the `mlf
 
 ### Question 11:
 Docker Compose is inherently limited to single-node orchestration. To distribute replicas across multiple machines, automatically load balance incoming traffic, and provide self-healing failover if a machine dies, we would need a distributed container orchestration system like Kubernetes or Docker Swarm.
+
+# LAB 5
+
+### Question 1:
+It is a bad idea to load the real model from MLflow during a unit test because it introduces external dependencies that make tests slow, brittle, and non-deterministic. Two ways a test could fail even if the code is perfectly correct are:
+The MLflow server is temporarily down or inaccessible due to network issues.
+The champion alias was accidentally moved to a broken or missing model artifact in the database, causing the test to crash when it tries to download it.
+
+### Question 2:

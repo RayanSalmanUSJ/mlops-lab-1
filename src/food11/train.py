@@ -1,13 +1,15 @@
 import argparse
-import mlflow
+import os
+
 import mlflow.pytorch
 import torch
-import os
-import torch.nn as nn
-import torch.optim as optim
-from torchvision import datasets, models, transforms
+from torch import nn, optim
 from torch.utils.data import DataLoader
+from torchvision import datasets, models, transforms
 from torchvision.models import ResNet18_Weights
+
+import mlflow
+
 
 def main():
     parser = argparse.ArgumentParser()
